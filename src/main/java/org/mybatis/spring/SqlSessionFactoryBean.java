@@ -65,7 +65,7 @@ import static org.springframework.util.StringUtils.tokenizeToStringArray;
  * @author Hunter Presnall
  * @author Eduardo Macarron
  * @author Eddú Meléndez
- * @author Kazuki Shimizu
+ * @author Kazuki Shimizuao
  * @see #setConfigLocation
  * @see #setDataSource
  */
@@ -524,6 +524,19 @@ public class SqlSessionFactoryBean
             }
         }
 
+        /**
+         * 核心：这里使用了SpringManagedTransactionFactory, 它得到SpringManagedTransaction，它的doGetConnection
+         * {@link org.springframework.jdbc.datasource.DataSourceUtils#doGetConnection(javax.sql.DataSource)}
+         * 联系到了 TransactionSynchronizationManager.getResource(dataSource);
+         * 这就解决的我的疑惑，DataSourceTransactionManager在getTransaction中在threadLocal中明明是绑定了<DataSource,ConnectionHolder>这个entry，
+         * 为什么在使用mybatis时用到的居然是一个connection，并且可以做事务的commit与回滚，要知道在SqlSessionTemplate中SqlSessionInterceptor中获取
+         * SqlSession时是从TransactionSynchronizationManager中是用SqlSessionFactory作为key来取的(value是SqlSession),貌似二者没啥联系吧，中间的
+         * 曲折是酱紫的，从TransactionSynchronizationManager中获取到的这个SqlSession是从DefaultSqlSessionFactory中openSession中得到的，
+         * 这个DefaultSqlSession的TransactionFactory是SpringManagedTransactionFactory，在后面正式做数据库操作时，需要获取真正的数据库Connection,
+         * 这个Connection是从TransactionManager中获得的，具体的实现中mybatis自己的ManagedTransaction是直接从dataSource中拿一个新的，
+         * 而SpringManagedTransactions则是通过DataSourceUtils操作TransactionSynchronizationManager获得的，key是dataSource..
+         * OVER
+         */
         targetConfiguration.setEnvironment(
                 new Environment(
                         this.environment,

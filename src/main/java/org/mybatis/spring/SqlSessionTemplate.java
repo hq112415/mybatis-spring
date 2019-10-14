@@ -398,7 +398,6 @@ public class SqlSessionTemplate implements SqlSession, DisposableBean {
 
             SqlSession sqlSession = SqlSessionUtils.getSqlSession(SqlSessionTemplate.this.sqlSessionFactory,
                     SqlSessionTemplate.this.executorType, SqlSessionTemplate.this.exceptionTranslator);
-
             try {
                 Object result = method.invoke(sqlSession, args);
                 if (!isSqlSessionTransactional(sqlSession, SqlSessionTemplate.this.sqlSessionFactory)) {
