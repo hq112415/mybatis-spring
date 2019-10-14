@@ -1,38 +1,24 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans
- http://www.springframework.org/schema/beans/spring-beans.xsd">
+       xmlns:mybatis="http://mybatis.org/schema/mybatis-spring"
+       xsi:schemaLocation="
+  http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+  http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring.xsd">
 
-    <bean id="propertyConfigurer"
-          class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer">
-        <property name="locations">
-            <list>
-                <value>classpath:jdbc.properties</value>
-            </list>
-        </property>
-        <property name="fileEncoding" value="utf-8"/>
-    </bean>
-
+    <!--dataSource-->
     <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
-        <property name="url" value="${write.jdbc.url}"/>
-        <property name="username" value="${write.jdbc.username}"/>
-        <property name="password" value="${write.jdbc.password}"/>
-        <property name="initialSize" value="${write.jdbc.initialSize}"/>
-        <property name="minIdle" value="${write.jdbc.minIdle}"/>
-        <property name="maxActive" value="${write.jdbc.maxActive}"/>
-        <property name="maxWait" value="${write.jdbc.maxWait}"/>
-        <property name="timeBetweenEvictionRunsMillis" value="${write.jdbc.timeBetweenEvictionRunsMillis}"/>
-        <property name="minEvictableIdleTimeMillis" value="${write.jdbc.minEvictableIdleTimeMillis}"/>
-        <property name="validationQuery" value="SELECT 'x'"/>
-        <property name="testWhileIdle" value="${write.jdbc.testWhileIdle}"/>
-        <property name="testOnBorrow" value="${write.jdbc.testOnBorrow}"/>
-        <property name="testOnReturn" value="${write.jdbc.testOnReturn}"/>
-        <property name="poolPreparedStatements" value="${write.jdbc.poolPreparedStatements}"/>
-        <property name="filters" value="stat"/>
-        <property name="connectionInitSqls" value="SET names utf8mb4"/>
+        <property name="url" value="jdbc:mysql://localhost:3306/test01"/>
+        <property name="username" value="root"/>
+        <property name="password" value="123456"/>
     </bean>
 
+    <!--txManager-->
+    <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <constructor-arg index="0" ref="dataSource"/>
+    </bean>
+
+    <!--获取mybatis操作-->
+    <!--1.SqlSessionTemplate-->
     <bean id="readSqlSession" class="org.mybatis.spring.SqlSessionTemplate">
         <constructor-arg>
             <bean class="org.mybatis.spring.SqlSessionFactoryBean">
@@ -42,10 +28,24 @@
             </bean>
         </constructor-arg>
     </bean>
+    <!--2.单mapper个注册-->
+    <!--<bean id="userMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">-->
+        <!--<property name="mapperInterface" value="org.mybatis.my.tx.StudentMapper"/>-->
+        <!--<property name="sqlSessionFactory">-->
+            <!--<bean class="org.mybatis.spring.SqlSessionFactoryBean">-->
+                <!--<property name="configLocation" value="classpath:org/mybatis/my/tx/mybatis-config.xml"/>-->
+                <!--<property name="dataSource" ref="dataSource"/>-->
+                <!--<property name="mapperLocations" value="classpath:org/mybatis/my/tx/StudentMapper.xml"/>-->
+            <!--</bean>-->
+        <!--</property>-->
+    <!--</bean>-->
 
-    <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
-        <constructor-arg index="0" ref="dataSource"/>
+    <!--3.1 包扫描 mybatis:scan-->
+    <!--<mybatis:scan base-package="org.mybatis.my.tx"/>-->
+
+    <!--3.2 包扫描 mybatis:scan-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="org.mybatis.my.tx" />
     </bean>
-
 
 </beans>
